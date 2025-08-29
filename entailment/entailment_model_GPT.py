@@ -1,0 +1,132 @@
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from Levenshtein import ratio
+import openai
+import os
+import subprocess
+
+class GPTEntailmentModel():
+    def __init__(self):
+        with open("oai_key", "r") as f:
+            self.api_key = f.read().strip()
+            
+        openai.api_key = self.api_key
+        self.model = "gpt-3.5-turbo"
+        
+        self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+        self.system_instructions = """You are an expert linguistic annotator who performs textual entailment: You will be presented with a premise and a hypothesis, and you shall answer whether the premise is equivalent to or entails the hypothesis (Entailment), contradicts it (Contradiction) or does not give enough information to conclude (Neutral). Answer "Entailment" or "Contradiction" only when you're absolutely confident, and "Neutral" the rest of the time (or when making assumptions). Answer only with "Entailment", "Contradiction" or "Neutral", nothing else."""
+        self.example_1 = "Premise: Ducks quack . Hypothesis: New York is a city ."
+        self.answer_1 = "Neutral"
+        self.example_2 = "Premise: X love the Beatles . Hypothesis: X likes the Beatles ."
+        self.answer_2 = "Entailment"
+        self.example_3 = "Premise: It is not true that X loves the Beatles . Hypothesis: X likes the Beatles ."
+        self.answer_3 = "Neutral"
+        self.example_10 = "Premise: Alex loves fruits . Hypothesis: John hates pears ."
+        self.answer_10 = "Neutral"
+        self.example_5 = "Premise: Alice changes often . Hypothesis: Alice change often ."
+        self.answer_5 = "Entailment"
+        self.example_6 = "Premise: It is not true that Jack is happy . Hypothesis: Jack is unhappy ."
+        self.answer_6 = "Entailment"
+        self.example_7 = "Premise: X hates cats . Hypothesis: X is a cat person ."
+        self.answer_7 = "Contradiction"
+        self.example_8 = "Premise: David has blonde hair . Hypothesis: David likes football ."
+        self.answer_8 = "Neutral"
+        self.example_9 = "Premise: X are a child . Hypothesis: X is a kid ."
+        self.answer_9 = "Entailment"
+        self.example_4 = "Premise: It is not true that X lives in France . Hypothesis: X lives in France ."
+        self.answer_4 = "Contradiction"
+
+
+    def make_request(self, prompt):
+        response = openai.ChatCompletion.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": self.system_instructions},
+                {"role": "user", "content": self.example_1},
+                {"role": "assistant", "content": self.answer_1},
+                {"role": "user", "content": self.example_2},
+                {"role": "assistant", "content": self.answer_2},
+                {"role": "user", "content": self.example_3},
+                {"role": "assistant", "content": self.answer_3},
+                {"role": "user", "content": self.example_4},
+                {"role": "assistant", "content": self.answer_4},
+                {"role": "user", "content": self.example_5},
+                {"role": "assistant", "content": self.answer_5},
+                {"role": "user", "content": self.example_6},
+                {"role": "assistant", "content": self.answer_6},
+                {"role": "user", "content": self.example_7},
+                {"role": "assistant", "content": self.answer_7},
+                {"role": "user", "content": self.example_8},
+                {"role": "assistant", "content": self.answer_8},
+                {"role": "user", "content": self.example_9},
+                {"role": "assistant", "content": self.answer_9},
+                {"role": "user", "content": self.example_10},
+                {"role": "assistant", "content": self.answer_10},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0,
+            max_tokens=20,
+            top_p=0
+        )
+        return response
+
+    def entail(self, pairs, correspondance_dict, batch_size, contrad_premise=False, entailment_cache={}):
+        if not contrad_premise:
+            contrad_premise = ""
+        else:
+            contrad_premise = "It is not true that "
+        result = []
+        for pair in pairs:
+            if (contrad_premise + correspondance_dict[pair[0]] + "/SEP/" + correspondance_dict[pair[1]]) in entailment_cache and entailment_cache[contrad_premise + correspondance_dict[pair[0]] + "/SEP/" + correspondance_dict[pair[1]]] in {"E", "C"}:
+                result.append((pair, entailment_cache[contrad_premise + correspondance_dict[pair[0]] + "/SEP/" + correspondance_dict[pair[1]]]))
+                continue
+
+            res_symbo =  self.entail_symbolic(contrad_premise + correspondance_dict[pair[0]], correspondance_dict[pair[1]])
+            if res_symbo in {"E", "C"}:
+                result.append((pair, res_symbo))
+                entailment_cache[(contrad_premise + correspondance_dict[pair[0]] + "/SEP/" + correspondance_dict[pair[1]])] = res_symbo
+            else:
+                prompt = "Premise: " + contrad_premise + correspondance_dict[pair[0]] + " Hypothesis: " + correspondance_dict[pair[1]]
+                response = self.make_request(prompt)
+                res = [c["message"]["content"] for c in response["choices"]][-1]
+
+                if "Entailment" in res:
+                    result.append((pair, "E"))
+                    entailment_cache[(contrad_premise + correspondance_dict[pair[0]] + "/SEP/" + correspondance_dict[pair[1]])] = "E"
+                elif "Contradiction" in res:
+                    result.append((pair, "C"))
+                    entailment_cache[(contrad_premise + correspondance_dict[pair[0]] + "/SEP/" + correspondance_dict[pair[1]])] = "C"
+                else:
+                    entailment_cache[(contrad_premise + correspondance_dict[pair[0]] + "/SEP/" + correspondance_dict[pair[1]])] = "N"
+        return result, entailment_cache
+
+
+    def entail_symbolic(self, premise, hypothesis):
+        premise = premise.lower()
+        hypothesis = hypothesis.lower()
+        if premise.count(" not ") == hypothesis.count(" not ") and premise.count("n't") == hypothesis.count("n't"):
+            if premise == hypothesis:
+                return "E" 
+            elif premise.replace("a ", "").replace("thing ", "").replace("person ", "") == hypothesis.replace("a ", "").replace("thing ", "").replace("person ", ""):
+                return "E"
+            elif premise.replace(" are ", " is ") == hypothesis.replace(" are ", " is "):
+                return "E"
+            elif premise.replace("ves ", "f ").replace("es ", " ").replace("s ", "") == hypothesis.replace("ves ", "f ").replace("es ", " ").replace("s ", ""):
+                return "E"
+            elif premise.replace("a ", "").replace("thing ", "").replace("person ", "").replace(" are ", " is ") == hypothesis.replace("a ", "").replace("thing ", "").replace("person ", "").replace(" are ", " is "):
+                return "E"
+            elif premise.replace("a ", "").replace("thing ", "").replace("person ", "").replace("ves ", "f ").replace("es ", " ").replace("s ", "") == hypothesis.replace("a ", "").replace("thing ", "").replace("person ", "").replace("ves ", "f ").replace("es ", " ").replace("s ", ""):
+                return "E"
+            elif premise.replace(" are ", " is ").replace("ves ", "f ").replace("es ", " ").replace("s ", "") == hypothesis.replace(" are ", " is ").replace("ves ", "f ").replace("es ", " ").replace("s ", ""):
+                return "E"
+            elif premise.replace("a ", "").replace("thing ", "").replace("person ", "").replace(" are ", " is ").replace("ves ", "f ").replace("es ", " ").replace("s ", "") == hypothesis.replace("a ", "").replace("thing ", "").replace("person ", "").replace(" are ", " is ").replace("ves ", "f ").replace("es ", " ").replace("s ", ""):
+                return "E"
+            return "N"
+        else:
+            if self.entail_symbolic(premise.replace(" not ", " ").replace("n't",""), hypothesis.replace(" not ", " ").replace("n't","")) == "E":
+                return "C"
+            return "N"
+
+"""model = GPTEntailmentModel()
+print(model.make_request("Premise: `` Stranger Things '' is a popular Netflix show . Hypothesis: Stranger Things is a Netflix show ."))"""

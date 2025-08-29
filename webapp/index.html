@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VANESSA</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: white;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            width: 600px;
+            margin: 0 20px; /* Add equal margin on both sides */
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        label {
+            font-weight: bold;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .error {
+            color: red;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            font-size: 18px;
+            color: #4CAF50;
+        }
+        textarea {
+            width: 60%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>VANESSA: Neuro-Symbolic Logical Reasoning</h2>
+        <form id="inputForm">
+            <div class="form-group">
+                <label for="premises">Premises</label>
+                <textarea id="premises" name="premises" rows="4" cols="30" placeholder="Enter your premises here..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="conclusion">Conclusion</label>
+                <textarea id="conclusion" name="conclusion" rows="2" cols="50" placeholder="Enter your conclusion here..."></textarea>
+            </div>
+            <div>
+                <label for="preset-dropdown">Presets</label>
+                <br>
+                <select id="preset-dropdown">
+                    <option value="">Select an example</option>
+                    {% for key, value in presets.items() %}
+                        <option value="{{ key }}">{{ key }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <br>
+            <div>
+                <label for="model">NLI Model</label>
+                <br>
+                <select id="model" name="model">
+                    <option value="Symbolic">Symbolic</option>
+                    <option value="LLaMa3">LLaMa3</option>
+                </select>
+            </div>
+            <br>
+            <button type="submit">Submit</button>
+            <p id="errorMessage" class="error"></p>
+            <p id="loadingMessage" class="loading">Processing... This can take a few minutes.</p> 
+        </form>
+    </div>
+    <script>
+        // Preset dropdown handling
+        // Get the select dropdown and text areas
+        const presetDropdown = document.getElementById('preset-dropdown');
+        const premisesTextarea = document.getElementById('premises');
+        const conclusionTextarea = document.getElementById('conclusion');
+        const presets = {{ presets | tojson | safe }};  // This converts the Python dictionary into a JSON object
+
+        presetDropdown.addEventListener('change', function() {
+        const selectedPreset = presetDropdown.value;
+            if (selectedPreset && presets[selectedPreset]) {
+                // Set the premises and conclusion based on the selected preset
+                premisesTextarea.value = presets[selectedPreset].premises;
+                conclusionTextarea.value = presets[selectedPreset].conclusion;
+            } else {
+                // Clear the text areas if no valid preset is selected
+                premisesTextarea.value = '';
+                conclusionTextarea.value = '';
+            }
+        });
+
+        // Form submission handling
+        document.getElementById('inputForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const premises = document.getElementById('premises').value;
+            const conclusion = document.getElementById('conclusion').value;
+            const errorMessage = document.getElementById('errorMessage');
+            const loadingMessage = document.getElementById('loadingMessage');
+            errorMessage.textContent = '';  // Clear previous errors
+            loadingMessage.style.display = 'block';  // Show loading message
+            const screenWidth = window.innerWidth;
+            // Send data to Flask server
+            fetch('/submit', {
+                method: 'POST',
+                body: new URLSearchParams({
+                    'premises': premises,
+                    'conclusion': conclusion,
+                    'model': document.getElementById('model').value,
+                    'width': screenWidth,
+                }),
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                loadingMessage.style.display = 'none';  // Hide loading message
+                if (data.error) {
+                    errorMessage.textContent = "Error during processing - please try again later";
+                } else {
+                    window.location.href = '/results.html';
+                }
+            })
+            .catch(error => {
+                loadingMessage.style.display = 'none';  // Hide loading message
+                errorMessage.textContent = "Error during processing - please try another input";
+                console.error('Error:', error);
+            });
+        });
+    </script>
+    </body>
+    </html>

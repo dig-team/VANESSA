@@ -1,0 +1,10 @@
+*__pycache__*
+environments/*
+temp/*
+segbot/*
+data/*
+cache/*
+*.out
+Baselines/*
+LogicBench/*
+parsing/*

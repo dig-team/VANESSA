@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results</title>
+    {{ graph_head|safe }}
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 10px;
+            padding: 0px;
+            background-color: #ffffff;
+        }
+        .cont {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin: 0px;
+        }
+        .content {
+            width: 40%;
+            background: rgb(255, 255, 255);
+            padding: 20px;
+            border-radius: 0px;
+            margin: 0
+        }
+        .proof {
+            width: 20%;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        h1 {
+            text-align: left;
+            margin-top: 20px;
+            margin-left: 20px;
+        }
+        h2 {
+            margin-top: 15px;
+        }
+        .block {
+            margin-bottom: 20px;
+            margin-top: 20px;
+        }
+        .block h3 {
+            margin-bottom: 10px;
+        }
+        .block p {
+            margin: 15px 0;
+            font-size: 18px;
+        }
+        .entailments {
+            margin-top: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        #graph-container {
+            width: 100%;
+            height: 650px;
+            border: 1px solid white;
+            box-sizing: border-box;
+        }
+        #mynetwork {
+            width: 100%;
+            height: 650px;
+            background-color: #ffffff;
+            border: 1px solid lightgray;
+            position: relative;
+            float: left;
+        }
+    </style>
+</head>
+<body>
+    {% if output.result == True or output.result == False %}
+        <h1 style="margin-left: 20px;">Proof Graph</h1>
+        <div id="graph-container">
+            {{ graph_body|safe }}
+        </div>
+    {% endif %}
+
+    
+    <h2 style="margin-left:0px; margin-bottom: 0; text-align: center;" >VANESSA Prediction: {{output.result}}</h2>
+    <div class="cont">
+        <div class="content">
+            <div class="block">
+                <h2>Premises</h2>
+                {% for log_premise in output.premises_strings %}
+                    <p>{{log_premise|safe}}</p>
+                {% endfor %}
+                <h2>Conclusion</h2>
+                <p>{{ output.conclusion_string| safe }}</p>
+            </div>
+        </div>
+        <div class="proof">
+            <h2>Proof</h2>
+            {% for proof_line in output.proof_lines %}
+                <p style="margin: 5px; font-size: 18px;">{{ proof_line| safe }}</p>
+            {% endfor %}
+        </div>
+        <div class="content">
+            <h2>Correspondences</h2>
+            {% for key, value in output.correspondance_dict.items() %}
+                <p style="margin: 5px; font-size: 18px;">{{ key }}: {{ value }}</p2>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="entailments">
+        <h2>Entailments</h2>
+        {% for line in output.entailments %}
+            <p style="margin: 5px; font-size: 18px;">{{ line | safe}}</p>
+        {% endfor %}
+    </div>
+
+</body>
+</html>
