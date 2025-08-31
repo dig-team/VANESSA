@@ -45,6 +45,14 @@ def flatten_list(l):
             
     return result
 
+def find_biggest_NP_parent(span): #find the biggest NP constituency group a span belongs to
+    if span._.parent is not None:
+        if span._.parent._.labels[0] not in {'VP','S', 'PP', 'ADJP', 'ADVP'}:
+            return find_biggest_NP_parent(span._.parent)
+        else:
+            return span
+    else:
+        return None
 
 def find_instances(text, spacy_model):
     print("FIND INSTANCES EN COURS")

@@ -5,7 +5,7 @@ Resources for the paper "[**Verifying the Steps of Deductive Reasoning Chains **
 Authors: [Zacchary Sadeddine](https://sadzac.github.io/) and [Fabian Suchanek](https://www.suchanek.name/).
 
 ## Main use
-python QA.py TASK DATASET_NAME NLI_MODEL DATASET_VERSION
+python main.py TASK DATASET_NAME NLI_MODEL DATASET_VERSION
 
 Datasets / Versions: 
 - FOLIO
