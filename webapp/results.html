@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=0.9">
     <title>Results</title>
     {{ graph_head|safe }}
     <style>
@@ -10,7 +10,7 @@
             font-family: Arial, sans-serif;
             margin: 10px;
             padding: 0px;
-            background-color: #ffffff;
+            background-color: #f9f9f9;
         }
         .cont {
             display: flex;
@@ -23,19 +23,15 @@
             background: rgb(255, 255, 255);
             padding: 20px;
             border-radius: 0px;
-            margin: 0
+            margin: 10px;
         }
         .proof {
-            width: 20%;
+            width: 25%;
             background: white;
             padding: 20px;
             border-radius: 8px;
         }
-        h1 {
-            text-align: left;
-            margin-top: 20px;
-            margin-left: 20px;
-        }
+
         h2 {
             margin-top: 15px;
         }
@@ -57,31 +53,261 @@
             border-radius: 8px;
         }
         #graph-container {
-            width: 100%;
-            height: 650px;
+            width: 90%;
+            height: 600px;
             border: 1px solid white;
             box-sizing: border-box;
         }
         #mynetwork {
             width: 100%;
-            height: 650px;
+            height: 600px;
             background-color: #ffffff;
             border: 1px solid lightgray;
             position: relative;
             float: left;
         }
+
+        .input-implicit {
+            max-width: 900px;
+            margin: 30px auto 40px auto;
+            display: grid;
+            grid-template-columns: 2.5fr 1fr;
+            gap: 20px;
+            align-items: center;
+            background: #ffffff;   /* Clean white background */
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);  /* Soft shadow to lift the card */
+        }
+        .context {
+            font-size: 15px;
+            line-height: 1.45;
+            color: #444;
+        }
+
+        h1 {
+            text-align: left;
+            font-size: 24px;
+            margin-bottom: 20px;
+            font-weight: 700;
+            color: #333;
+        }
+        .context-line {
+            font-size: 16px;
+            line-height: 1.5;
+            margin: 5px 0;
+            color: #555;  /* Slightly darker for readability */
+        }
+
+        .focus {
+            font-size: 20px;
+            font-weight: 600;
+            line-height: 1.5;
+            padding-left: 20px;
+            border-left: 4px solid #4CAF50;  /* Green accent for the conclusion */
+            color: #333;
+        }
+
+        .framed {
+            padding: 20px;
+            background: #fafafa;
+            border: 1px solid #e3e3e3;
+            border-radius: 10px;
+        }
+        .prediction-block {
+            max-width: 900px;
+            margin: 40px auto 30px auto;
+            text-align: center;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .prediction-label {
+            font-size: 14px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 15px;
+        }
+
+        .prediction-value {
+            font-size: 48px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            margin-top: 10px;
+            padding: 12px 0;
+            border-radius: 6px;
+            transition: all 0.3s ease;  /* Smooth transition on hover */
+        }
+
+        .prediction-value.true {
+            color: #2f9e44;   /* Soft green */
+            background: #d6f9e7;  /* Light green background */
+        }
+
+        .prediction-value.false {
+            color: #d9480f;   /* Soft red */
+            background: #f9e0d7;  /* Light red background */
+        }
+
+        .prediction-value.uncertain {
+            color: #e67700;   /* Soft orange */
+            background: #fff4e1;  /* Light orange background */
+        }
+
+        .prediction-value:hover {
+            transform: scale(1.05);   /* Subtle hover effect */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);  /* Slight shadow on hover */
+        }
+        .prediction-value::after {
+            content: "";
+            display: block;
+            width: 48px;
+            height: 3px;
+            margin: 10px auto 0 auto;
+            background: currentColor;
+            border-radius: 2px;
+            opacity: 0.6;
+        }
+
+
+        /* graphe */
+        .graph-section {
+            max-width: 1100px;
+            margin: 10px auto 40px auto;
+        }
+
+        .graph-title {
+            margin: 10px 0 12px 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: #444;
+            text-align: center;
+        }
+        .proof-block {
+            max-width: 900px;
+            margin: 30px auto 40px auto;
+            padding: 18px 22px;
+            background: #ffffff;
+            border: 1px solid #e3e3e3;
+            border-radius: 8px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .proof-header {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #222;
+            border-bottom: 2px solid #e3e3e3;
+            padding-bottom: 10px;
+        }
+
+        .proof-lines {
+            display: flex;
+            flex-direction: column;
+            gap: 6px; /* espace subtil entre lignes */
+        }
+
+        .proof-line {
+            color: #444;
+            padding: 2px 0; /* léger padding pour aérer */
+        }
+
+        .graph-block {
+            max-width: 900px;
+            margin: 30px auto 50px auto;
+            padding: 20px 25px;
+            background: #ffffff;
+            border: 1px solid #e3e3e3;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .graph-header {
+            font-size: 18px;
+            font-weight: 600;
+            color: #222;
+            text-align: center;
+            margin-bottom: 20px;  /* Space below the header */
+            padding-bottom: 10px;  /* Padding for consistency */
+            border-bottom: 2px solid #e3e3e3;  /* Adding a bottom border for separation */
+        }
+
+        #graph-container {
+            width: 100%;
+            height: 600px;
+            background-color: #ffffff;  /* neutre pour le graphe */
+            border: 1px solid #e3e3e3;  /* léger contraste avec le bloc */
+            border-radius: 4px;
+            box-sizing: border-box;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+        .back-nav {
+            position: fixed;
+            top: 18px;
+            left: 22px;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            color: #555;
+            letter-spacing: 0.02em;
+            transition: color 0.2s ease, opacity 0.2s ease;
+            opacity: 0.85;
+        }
+
+        .back-nav:hover {
+            color: #2f9e44;   /* VANESSA green */
+            opacity: 1;
+        }
+
+
     </style>
 </head>
 <body>
+    <a href="/" class="back-nav">← Return to Input</a>
+    <div class="input-implicit framed">
+        <div class="context">
+            {% for log_premise in output.premises %}
+                <div class="context-line">{{ log_premise|safe }}</div>
+            {% endfor %}
+        </div>
+    
+        <div class="focus">
+            {{ output.conclusion|safe }}
+        </div>
+    </div>
+
+    <div class="prediction-block">
+        <div class="prediction-label">VANESSA prediction (using {{ output.model_name }} model)</div>
+        <div class="prediction-value {{ 'true' if output.result == True else 'false' if output.result == False else 'uncertain'}}">
+            {{ output.result }}
+        </div>
+    </div>
+
     {% if output.result == True or output.result == False %}
-        <h1 style="margin-left: 20px;">Proof Graph</h1>
+    <div class="graph-block framed">
+        <div class="graph-header">Reasoning Graph</div>
         <div id="graph-container">
             {{ graph_body|safe }}
         </div>
+    </div>
     {% endif %}
 
+    <div class="proof-block framed">
+        <div class="proof-header">Textual Proof</div>
+        <div class="proof-lines">
+            {% for proof_line in output.tp %}
+                <div class="proof-line">{{ proof_line|safe }}</div>
+            {% endfor %}
+        </div>
+    </div>
     
-    <h2 style="margin-left:0px; margin-bottom: 0; text-align: center;" >VANESSA Prediction: {{output.result}}</h2>
+    <!--
     <div class="cont">
         <div class="content">
             <div class="block">
@@ -111,7 +337,7 @@
         {% for line in output.entailments %}
             <p style="margin: 5px; font-size: 18px;">{{ line | safe}}</p>
         {% endfor %}
-    </div>
+    </div>-->
 
 </body>
 </html>

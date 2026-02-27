@@ -8,6 +8,8 @@ import json
 
 def build_graph(proof_lines, correspondance_dict, entailments, log_premises):
     graph = nx.DiGraph()
+    print("Building graph with", len(proof_lines), "lines, and", len(correspondance_dict), "correspondance_dict entries")
+    print(proof_lines)
     proof_lines = clean_proof_graph(proof_lines, correspondance_dict, entailments, log_premises)
     for line in proof_lines:
         if line["line_type"] == "ent-rem":
@@ -38,15 +40,25 @@ def build_graph(proof_lines, correspondance_dict, entailments, log_premises):
     for node in net.nodes:
         # Utiliser l'attribut 'full_text' pour afficher sur le nœud
         full_text = graph.nodes[node['id']].get('text', '')
-        full_text = full_text.replace(" → ", "\n→ ")
-        full_text = full_text.replace(" ∧ ", "\n∧ ")
-        full_text = full_text.replace(" ∨ L", "\n∨ L")
+        #full_text = full_text.replace(" → ", "\n→ ")
+        #full_text = full_text.replace(" ∧ ", "\n∧ ")
+        #full_text = full_text.replace(" ∨ ", "\n∨ ")
+        #full_text = full_text.replace(" ⊢ ", "⊢\n")
+        full_text = full_text.replace(" .", ".")
+
+        #Saut de ligne tous les 20 caractères sur la même ligne (à la place du 1er espace qui suit)
+        if len(full_text) > 20:
+            for i in range(20, len(full_text), 20):
+                space_index = full_text.find(" ", i)
+                if space_index != -1:
+                    full_text = full_text[:space_index] + "\n" + full_text[space_index + 1:]
+        
         node['label'] = full_text  # Afficher le texte sur le nœud
         node['size'] = 50  # Taille ajustée pour un affichage lisible
         #node['shape'] = "circle"
         # Personnaliser l'apparence du texte dans le nœud
         node['font'] = {
-            'size': 40,  # Taille du texte
+            'size': 50,  # Taille du texte
             'color': 'black',  # Couleur du texte
             'face': 'arial',  # Police du texte
             'background': 'white',  # Fond du texte
@@ -65,6 +77,7 @@ def build_graph(proof_lines, correspondance_dict, entailments, log_premises):
             edge['color'] = 'DimGray'
             edge['dashed'] = True
 
+    #print("width", session.get("output")["screen_width"])
     net.set_options(json.dumps({
             "layout": {
                 "hierarchical": {

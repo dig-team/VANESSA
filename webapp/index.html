@@ -13,57 +13,141 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            background-color: white;
+            min-height: 100vh;
+            background-color: #f7f7f7;
         }
+
         .container {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            width: 600px;
-            margin: 0 20px; /* Add equal margin on both sides */
+            background: #ffffff;
+            padding: 30px 40px;
+            border-radius: 10px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+            max-width: 650px;
+            width: 100%;
+            box-sizing: border-box;
         }
+
         h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 22px;
+            font-weight: 600;
+            color: #222;
+        }
+
+        label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 6px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 15px;
+            color: #333;
+            box-sizing: border-box;
+            transition: border 0.2s, box-shadow 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #2f9e44;  /* VANESSA green */
+            box-shadow: 0 0 4px rgba(47, 158, 68, 0.3);
+            outline: none;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px 0;
+            background-color: #2f9e44; /* VANESSA green */
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            background-color: #258038;  /* légèrement plus foncé au hover */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .error {
+            color: #d9480f;
+            margin-top: 10px;
+            font-weight: 500;
+        }
+
+        .loading {
+            min-height: 20px;  /* réserve l’espace même quand invisible */
+            display: block;
+            text-align: center;
+            font-size: 16px;
+            color: #2f9e44;
+            margin-top: 10px;
+            visibility: hidden; /* au lieu de display:none */
+        }
+        .loading.active {
+            visibility: visible;
+        }
+        .note {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .repo-link {
             text-align: center;
             margin-bottom: 20px;
         }
-        label {
-            font-weight: bold;
+
+        .repo-link a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #000000;
+            text-decoration: none;
+            padding: 6px 12px;
+            border: 1px solid #000000;
+            border-radius: 6px;
+            transition: all 0.2s ease;
         }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group input, .form-group select, .form-group textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            width: 100%;
-            padding: 10px;
-            background-color: #4CAF50;
+
+        .repo-link a:hover {
+            background-color: #000000;
             color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
         }
-        button:hover {
-            background-color: #45a049;
+
+        .repo-link svg {
+            transition: transform 0.2s ease;
         }
-        .error {
-            color: red;
+
+        .repo-link a:hover svg {
+            transform: scale(1.1);
         }
-        .loading {
-            display: none;
-            text-align: center;
-            font-size: 18px;
-            color: #4CAF50;
-        }
-        textarea {
-            width: 60%;
-        }
+
     </style>
 </head>
 <body>
@@ -72,17 +156,17 @@
         <form id="inputForm">
             <div class="form-group">
                 <label for="premises">Premises</label>
-                <textarea id="premises" name="premises" rows="4" cols="30" placeholder="Enter your premises here..."></textarea>
+                <textarea id="premises" name="premises" rows="4" cols="30">If someone likes bread, then she likes chocolate or cheese.
+Anyone who likes eating tomatoes does not like cheese.
+Lisa is a person who likes eating tomatoes, and she likes bread.</textarea>
             </div>
             <div class="form-group">
                 <label for="conclusion">Conclusion</label>
-                <textarea id="conclusion" name="conclusion" rows="2" cols="50" placeholder="Enter your conclusion here..."></textarea>
+                <textarea id="conclusion" name="conclusion" rows="2" cols="50">Lisa likes chocolate.</textarea>
             </div>
             <div>
                 <label for="preset-dropdown">Presets</label>
-                <br>
                 <select id="preset-dropdown">
-                    <option value="">Select an example</option>
                     {% for key, value in presets.items() %}
                         <option value="{{ key }}">{{ key }}</option>
                     {% endfor %}
@@ -91,17 +175,41 @@
             <br>
             <div>
                 <label for="model">NLI Model</label>
-                <br>
                 <select id="model" name="model">
                     <option value="Symbolic">Symbolic</option>
                     <option value="LLaMa3">LLaMa3</option>
                 </select>
             </div>
             <br>
+            <p class="note">
+                This system supports reasoning over explicitly stated facts and logical rules only, where no external or mathematical knowledge is required.
+            </p>
+            <br>
             <button type="submit">Submit</button>
             <p id="errorMessage" class="error"></p>
             <p id="loadingMessage" class="loading">Processing... This can take a few minutes.</p> 
         </form>
+        <div class="repo-link">
+            <a href="https://github.com/dig-team/VANESSA/tree/demo" target="_blank">
+                <svg height="16" width="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                    <path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 005.47 7.59c.4.07.55-.17.55-.38
+                    0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94
+                    -.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52
+                    -.01-.53.63-.01 1.08.58 1.23.82.72 1.21
+                    1.87.87 2.33.66.07-.52.28-.87.51-1.07
+                    -1.78-.2-3.64-.89-3.64-3.95
+                    0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12
+                    0 0 .67-.21 2.2.82a7.7 7.7 0 012.01-.27c.68
+                    0 1.36.09 2.01.27 1.53-1.04 2.2-.82 2.2-.82
+                    .44 1.1.16 1.92.08 2.12.51.56.82 1.27.82
+                    2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54
+                    1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01
+                    8.01 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                </svg>
+                <span>Source Code</span>
+            </a>
+        </div>
+        
     </div>
     <script>
         // Preset dropdown handling
@@ -123,6 +231,35 @@
                 conclusionTextarea.value = '';
             }
         });
+        // Polling
+        function pollJobStatus(jobId, attempt) {
+            if (attempt >= 300) {  // timeout après ~10 min
+                loadingMessage.classList.remove('active');
+                errorMessage.textContent = "Processing timeout - please try again later";
+                return;
+            }
+
+            fetch(`/job_status/${jobId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'started') {
+                        setTimeout(() => pollJobStatus(jobId, attempt + 1), 3000);
+                    } else if (data.status === 'finished') {
+                        loadingMessage.classList.remove('active');
+                        window.location.href = '/results.html';
+                    } else if (data.status === 'failed') {
+                        loadingMessage.classList.remove('active');
+                        errorMessage.textContent = "Error during processing - please try again later";
+                    } else {
+                        setTimeout(() => pollJobStatus(jobId, attempt + 1), 5000);
+                    }
+                })
+                .catch(error => {
+                    loadingMessage.classList.remove('active');
+                    errorMessage.textContent = "Error during processing - please try again later";
+                    console.error('Polling error:', error);
+                });
+        }
 
         // Form submission handling
         document.getElementById('inputForm').addEventListener('submit', function(event) {
@@ -132,7 +269,7 @@
             const errorMessage = document.getElementById('errorMessage');
             const loadingMessage = document.getElementById('loadingMessage');
             errorMessage.textContent = '';  // Clear previous errors
-            loadingMessage.style.display = 'block';  // Show loading message
+            loadingMessage.classList.add('active');  // Show loading message
             const screenWidth = window.innerWidth;
             // Send data to Flask server
             fetch('/submit', {
@@ -149,15 +286,11 @@
             })
             .then(response => response.json())
             .then(data => {
-                loadingMessage.style.display = 'none';  // Hide loading message
-                if (data.error) {
-                    errorMessage.textContent = "Error during processing - please try again later";
-                } else {
-                    window.location.href = '/results.html';
-                }
+                const jobId = data.job_id;
+                pollJobStatus(jobId, 0); // Démarre le polling
             })
             .catch(error => {
-                loadingMessage.style.display = 'none';  // Hide loading message
+                loadingMessage.classList.remove('active');
                 errorMessage.textContent = "Error during processing - please try another input";
                 console.error('Error:', error);
             });

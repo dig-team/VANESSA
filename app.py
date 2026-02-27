@@ -26,16 +26,19 @@ with app.app_context():
 def index():
     presets = {
         'Example 1': {
+            'premises': "If someone likes bread, then she likes chocolate or cheese.\nAnyone who likes eating tomatoes does not like cheese.\nLisa is a person who likes eating tomatoes, and she likes bread.",
+            'conclusion': 'Lisa likes chocolate.'},
+        'Example 1 - variation': {
             'premises': "If someone likes bread, then they like chocolate or cheese.\nAnyone who likes eating tomatoes hates even the idea of cheese.\nLisa is the biggest tomato lover I know, but she also is a fan of bread.",
             'conclusion': 'Lisa is fond of chocolate.'
         },
         'Example 2': {
-            'premises': "Every grimpus is a lorpus. Everything that is a zumpus, a shumpus, or a sterpus is a gorpus. Jompuses are gorpuses. Everything that is a wumpus, an impus, or a sterpus is a gorpus. Tumpuses are yumpuses. Everything that is a wumpus or a numpus or a dumpus is a lempus. Everything that is a wumpus or a numpus or a dumpus is a zumpus, a tumpus, and a jompus. Jompuses are impuses. Wren is a lorpus and a shumpus and a brimpus. Wren is a wumpus and a grimpus and a jompus.",
-            'conclusion': 'Wren is a vumpus, a zumpus, or a grimpus.'
+            'premises': "Bob is kind. Bob is nice. Bob is white. Charlie is kind. Charlie is white. Erin is red. Erin is rough. Harry is blue. Harry is kind. Harry is red. Blue people are nice. All white people are red. If someone is white and blue then they are nice. All rough people are red. If someone is smart then they are blue. If someone is kind then they are red. If someone is nice then they are rough. If someone is red then they are smart. If someone is red and rough then they are nice.",
+            'conclusion': 'Is it true that Erin is not nice?'
         },
         'Example 3': {
-            'premises': "All employees who schedule a meeting with their customers will appear in the company today. Everyone who has lunch in the company schedules meetings with their customers. Employees will either have lunch in the company or have lunch at home. If an employee has lunch at home, then he/she is working remotely from home. All employees who are in other countries work remotely from home. No managers work remotely from home. James is either a manager and appears in the company today or neither a manager nor appears in the company today.",
-            'conclusion': 'Is it true that James has lunch in the company?'
+            'premises': "If someone has lunch in the company, they scheduled a meeting with their customer. James won't be at the company today. Employees who don't work remotely have lunch in the company. No managers work remotely. All employees who planned a meeting will appear in the company today. No managers work remotely from home. ",
+            'conclusion': 'James is a manager.'
         }
         # Add more presets as needed
     }
@@ -140,8 +143,10 @@ def results():
     output["premises_strings"] = prepare_premises(log_premises, correspondance_dict, premises, new_variables)
     output["conclusion_string"] = prepare_premises([log_conclusion], correspondance_dict, [conclusion], new_variables)[0]
     output["proof_lines"] = prepare_proof_lines(proof_lines, correspondance_dict, entailments, log_premises+[log_conclusion], new_variables)
+    output["tp"] = prepare_textual_proof(proof_lines, correspondance_dict, entailments, log_premises+[log_conclusion], new_variables, premises)
     output["entailments"] = prepare_entailments(entailments, new_variables, correspondance_dict)
     output["correspondance_dict"] = {new_variables[k]: v for k,v in correspondance_dict.items()}
+    output["model_name"] = model if model is not None else "Symbolic"
     return render_template('results.html', output=output, graph_head=graph_head, graph_body=graph_body)
 
 #@app.route('/graph')
